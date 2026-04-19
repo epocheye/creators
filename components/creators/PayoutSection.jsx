@@ -14,7 +14,13 @@ const STATUS_STYLES = {
 	failed: "text-red-400",
 };
 
-export default function PayoutSection({ available, payouts, upiId, minPayout = 500, onPayoutRequested }) {
+export default function PayoutSection({
+	available,
+	payouts,
+	upiId,
+	minPayout = 500,
+	onPayoutRequested,
+}) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
 
@@ -24,7 +30,9 @@ export default function PayoutSection({ available, payouts, upiId, minPayout = 5
 			return;
 		}
 		if (available < minPayout) {
-			setError(`Minimum payout is ₹${minPayout}. You have ₹${available?.toFixed(2)} available.`);
+			setError(
+				`Minimum payout is ₹${minPayout}. You have ₹${available?.toFixed(2)} available.`,
+			);
 			return;
 		}
 		setIsLoading(true);
