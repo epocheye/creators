@@ -7,7 +7,7 @@ export default function SignupPage() {
 			<SignUp
 				routing="path"
 				path="/signup"
-				signInUrl="/login"
+				signInUrl={CREATOR_ROUTES.login}
 				forceRedirectUrl={`${CREATOR_ROUTES.dashboard}?signup=1`}
 			/>
 		</div>

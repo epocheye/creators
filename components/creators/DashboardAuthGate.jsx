@@ -2,33 +2,39 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
 import { CREATOR_ROUTES } from "@/lib/creatorRoutes";
 
 /**
  * Client-side auth gate for the dashboard.
  *
- * Server-side protection is disabled (see middleware.js) because this app runs
- * on a separate subdomain deployment whose server cannot reliably read the
- * Clerk session cookie set for the primary domain. The client SDK *does* hold a
- * valid session, so we gate here: signed-in users see the dashboard; everyone
- * else is sent to /login. Data calls are still authorized by the Clerk bearer
- * token attached in lib/creatorApi.js, so no protected data renders to a
- * signed-out user.
+ * LOOP INVARIANT - read app/login/[[...rest]]/page.jsx before editing:
+ *   This gate redirects to /login ONLY when clerk-js has no client session at
+ *   all (`session == null`) - exactly the state in which <SignIn> renders
+ *   instead of bouncing an already-signed-in visitor back to /dashboard.
+ *
+ * Do NOT swap this for useAuth().isSignedIn. useAuth() defaults to
+ * `treatPendingAsSignedOut: true`, so it reports signed-OUT for a session whose
+ * status is "pending" while clerk-js still treats it as signed IN - that
+ * disagreement is what produces a /dashboard <-> /login redirect loop.
+ * useSession() exposes clerk-js's own view, so the two cannot disagree.
+ *
+ * Server-side protection is intentionally absent (see proxy.js).
  */
 export default function DashboardAuthGate({ children }) {
-	const { isLoaded, isSignedIn } = useAuth();
+	const { isLoaded, session } = useSession();
 	const router = useRouter();
 
+	const hasClientSession = Boolean(session);
+
 	useEffect(() => {
-		if (isLoaded && !isSignedIn) {
+		if (!isLoaded) return;
+		if (!hasClientSession) {
 			router.replace(CREATOR_ROUTES.login);
 		}
-	}, [isLoaded, isSignedIn, router]);
+	}, [isLoaded, hasClientSession, router]);
 
-	// Wait for Clerk to resolve, and render nothing while redirecting a
-	// signed-out user, to avoid flashing the dashboard shell.
-	if (!isLoaded || !isSignedIn) {
+	if (!isLoaded || !hasClientSession) {
 		return (
 			<div className="min-h-screen flex items-center justify-center bg-[#080808]">
 				<div className="h-6 w-6 rounded-full border-2 border-white/15 border-t-white/60 animate-spin" />
