@@ -7,6 +7,7 @@ import DashboardAuthGate from "@/components/creators/DashboardAuthGate";
 import { creatorFetch } from "@/lib/creatorApi";
 import { CREATOR_ROUTES } from "@/lib/creatorRoutes";
 import {
+	ASSIGNMENT_DAYS,
 	CUSTOMER_DISCOUNT_PERCENT,
 	LIST_PRICE_INR,
 	SUPPORT_EMAIL,
@@ -77,7 +78,12 @@ function AcceptTermsForm() {
 						list price per sale, rising with your total sales.
 					</li>
 					<li>
-						Live at: {monuments.map((m) => m.name).join(", ")}.
+						You get one monument for {ASSIGNMENT_DAYS} days at a time, and your code works only
+						there during that window. Monuments now: {monuments.map((m) => m.name).join(", ")}.
+					</li>
+					<li>
+						No links: people enter your code in the app. Entries count as clicks; only paid
+						unlocks with your code count as sales.
 					</li>
 					<li>Payouts go by UPI, in rupees.</li>
 				</ul>

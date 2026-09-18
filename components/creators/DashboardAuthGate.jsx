@@ -7,6 +7,7 @@ import { creatorFetch } from "@/lib/creatorApi";
 import { CREATOR_ROUTES } from "@/lib/creatorRoutes";
 
 export const ACCEPT_TERMS_PATH = "/accept";
+export const APPLY_PATH = "/apply";
 
 /**
  * Client-side auth gate for the dashboard.
@@ -24,11 +25,12 @@ export const ACCEPT_TERMS_PATH = "/accept";
  *
  * Server-side protection is intentionally absent (see proxy.js).
  *
- * TERMS: with `requireTerms` (the default), a signed-in creator who has not
- * accepted the current creator terms is sent to ACCEPT_TERMS_PATH. If the
- * profile can't be loaded, the dashboard renders anyway: the server keeps the
- * code unsynced (unusable in the app) until acceptance, so failing open here
- * never makes a code live without it.
+ * ACCESS: with `requireTerms` (the default), a signed-in creator who is not
+ * approved yet is sent to APPLY_PATH, and an approved one who has not accepted
+ * the current terms to ACCEPT_TERMS_PATH. If the profile can't be loaded, the
+ * dashboard renders anyway: the server keeps a code off in the app until the
+ * creator is approved, has accepted, and holds a site, so failing open here
+ * never makes a code live.
  */
 export default function DashboardAuthGate({ children, requireTerms = true }) {
 	const { isLoaded, session } = useSession();
@@ -51,9 +53,15 @@ export default function DashboardAuthGate({ children, requireTerms = true }) {
 			try {
 				const res = await creatorFetch("/api/creator/me");
 				const json = await res.json();
-				if (active && json?.success && json.data?.terms_current === false) {
-					router.replace(ACCEPT_TERMS_PATH);
-					return;
+				if (active && json?.success) {
+					if (json.data?.status !== "active") {
+						router.replace(APPLY_PATH);
+						return;
+					}
+					if (json.data?.terms_current === false) {
+						router.replace(ACCEPT_TERMS_PATH);
+						return;
+					}
 				}
 			} catch {
 				// Fail open; see the TERMS note above.

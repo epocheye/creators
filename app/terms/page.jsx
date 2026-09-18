@@ -1,6 +1,8 @@
 import Link from "next/link";
 import {
 	ACCESS_HOURS,
+	ASSIGNMENT_DAYS,
+	MAX_CREATORS,
 	CHANGE_NOTICE_DAYS,
 	CUSTOMER_DISCOUNT_PERCENT,
 	HOLD_DAYS,
@@ -17,7 +19,7 @@ import {
 export const metadata = {
 	title: "Creator Program Terms - Epocheye",
 	description:
-		"Plain-language terms for the Epocheye Creator Program: what counts as a sale, how commission is calculated, payouts, and fraud.",
+		"Plain-language terms for the Epocheye Creator Program: approval, monument exclusivity, what counts as a click and a sale, commission, payouts, and fraud.",
 };
 
 const MAIN_SITE_ORIGIN = (
@@ -84,9 +86,11 @@ export default async function CreatorTermsPage() {
 				<div className="space-y-9 text-sm leading-relaxed text-white/65">
 					<Section n={1} title="Who can join">
 						<p>
-							The program is currently open only to residents of India with a
-							UPI ID in their own name. You must be at least 18. One creator
-							account per person.
+							The program is invite-only. You apply by signing up and submitting
+							your profile; Epocheye reviews every application and may accept or
+							decline it at its discretion. At most {MAX_CREATORS} creators are in
+							the program at a time. You must be a resident of India, at least 18,
+							with a UPI ID in your own name. One creator account per person.
 						</p>
 					</Section>
 
@@ -106,20 +110,41 @@ export default async function CreatorTermsPage() {
 						</p>
 					</Section>
 
-					<Section n={3} title="What counts as a qualifying sale">
+					<Section n={3} title="Your monument and window">
 						<p>
-							A sale qualifies when a customer enters your code at checkout in
-							the Epocheye app and the payment is captured. Attribution is by
-							code only. There is no link-click or cookie window: a visitor who
-							clicks your link but buys without your code is not your sale.
+							Each monument has one creator at a time. When a monument is assigned
+							to you, it is yours for {ASSIGNMENT_DAYS} days, and your code works
+							only at that monument during that window. Outside your window, or at
+							any other monument, your code does not work.
 						</p>
 						<p>
-							A sale does not qualify if it is refunded or charged back, if you
-							or someone acting for you is the buyer, or if it breaks section 7.
+							At the end of your window, if your sales at that monument met the
+							sales target shown in your dashboard, the monument stays yours for
+							another {ASSIGNMENT_DAYS} days. If not, it passes to the next approved
+							creator in line and you rejoin the line. Epocheye sets the target and
+							may assign or end a window early in special cases, such as a
+							monument closing or a breach of section 8.
 						</p>
 					</Section>
 
-					<Section n={4} title="Commission">
+					<Section n={4} title="What counts as a click and a sale">
+						<p>
+							There are no referral links. You share your code, or a QR of it,
+							and people enter it in the Epocheye app. A click is a person
+							entering your code in the app, counted once per person per day.
+						</p>
+						<p>
+							A sale qualifies when a customer uses your code at checkout in the
+							Epocheye app, for your monument during your window, and the payment
+							is captured. Only qualifying sales earn commission.
+						</p>
+						<p>
+							A sale does not qualify if it is refunded or charged back, if you
+							or someone acting for you is the buyer, or if it breaks section 8.
+						</p>
+					</Section>
+
+					<Section n={5} title="Commission">
 						<p>
 							Commission is a percentage of the {formatInr(LIST_PRICE_INR)} list
 							price, not of the discounted price, so the customer discount never
@@ -143,7 +168,7 @@ export default async function CreatorTermsPage() {
 						</p>
 					</Section>
 
-					<Section n={5} title="Payouts">
+					<Section n={6} title="Payouts">
 						<p>
 							Each sale is held for {HOLD_DAYS} days so refunds can clear, then
 							becomes payable. Once your payable balance reaches{" "}
@@ -153,14 +178,14 @@ export default async function CreatorTermsPage() {
 						</p>
 					</Section>
 
-					<Section n={6} title="Refunds and chargebacks">
+					<Section n={7} title="Refunds and chargebacks">
 						<p>
 							If a sale is refunded or charged back, its commission is reversed.
 							If it was already paid out, we deduct it from your next payouts.
 						</p>
 					</Section>
 
-					<Section n={7} title="Fraud and prohibited activity">
+					<Section n={8} title="Fraud and prohibited activity">
 						<ul className="list-disc space-y-1 pl-5">
 							<li>Buying through your own code, or having others buy for you to earn commission.</li>
 							<li>Creating or using multiple or fake accounts, in the app or in this program.</li>
@@ -175,23 +200,23 @@ export default async function CreatorTermsPage() {
 						</p>
 					</Section>
 
-					<Section n={8} title="Changes and ending the program">
+					<Section n={9} title="Changes and ending the program">
 						<p>
 							We may change the commission rates, the discount, the list price,
-							or the list of monuments. We will give you at least{" "}
+							the list of monuments, the window length, or the sales target. We will give you at least{" "}
 							{`${CHANGE_NOTICE_DAYS} days'`} notice by email before a change
 							takes effect. Sales made before the change keep the terms they were
 							made under.
 						</p>
 						<p>
 							You can leave at any time. We can end your participation with
-							notice, or immediately for a breach of section 7. When
+							notice, or immediately for a breach of section 8. When
 							participation ends, payable commission from qualifying sales
-							is still paid, except commission withheld under section 7.
+							is still paid, except commission withheld under section 8.
 						</p>
 					</Section>
 
-					<Section n={9} title="Contact">
+					<Section n={10} title="Contact">
 						<p>
 							Questions about these terms:{" "}
 							<a href={`mailto:${SUPPORT_EMAIL}`} className="underline">
