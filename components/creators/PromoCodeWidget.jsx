@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Check, Download, QrCode } from "lucide-react";
 import { trackEvent, EVENT_NAMES } from "@/lib/analytics";
+import { styledQrPng } from "@/lib/styledQr";
 
 // Creators share only their code (or a QR of it). There is no link: nobody is
 // sent to a website or an app store. Followers type or scan the code into the
@@ -12,19 +13,16 @@ export default function PromoCodeWidget({ code }) {
 	const [qrDataUrl, setQrDataUrl] = useState(null);
 	const [showQr, setShowQr] = useState(false);
 
-	// QR of the plain code (no URL), generated on the client only.
+	// Epocheye-styled QR of the plain code (no URL), black on white: the
+	// version every phone scanner reads. Generated on the client only.
 	useEffect(() => {
 		if (!code) return;
 		let cancelled = false;
-		import("qrcode").then((QRCode) => {
-			QRCode.toDataURL(code, {
-				width: 300,
-				margin: 2,
-				color: { dark: "#ffffff", light: "#0d0d0d" },
-			}).then((url) => {
+		styledQrPng(code, { logoHref: "/logo-black.png" })
+			.then((url) => {
 				if (!cancelled) setQrDataUrl(url);
-			});
-		});
+			})
+			.catch(() => {});
 		return () => {
 			cancelled = true;
 		};
@@ -41,13 +39,32 @@ export default function PromoCodeWidget({ code }) {
 		}
 	};
 
+	const saveAs = (url, name) => {
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = name;
+		a.click();
+	};
+
 	const downloadQr = () => {
 		if (!qrDataUrl) return;
 		trackEvent(EVENT_NAMES.promoQrDownloaded);
-		const a = document.createElement("a");
-		a.href = qrDataUrl;
-		a.download = `epocheye-${code}-qr.png`;
-		a.click();
+		saveAs(qrDataUrl, `epocheye-${code}-qr.png`);
+	};
+
+	// White code + white logo on a transparent background, for dark posts.
+	const downloadQrWhite = async () => {
+		try {
+			const url = await styledQrPng(code, {
+				color: "#ffffff",
+				background: "none",
+				logoHref: "/logo-white.png",
+			});
+			trackEvent(EVENT_NAMES.promoQrDownloaded);
+			saveAs(url, `epocheye-${code}-qr-white.png`);
+		} catch {
+			// Rendering can fail on very old browsers; the black version still works.
+		}
 	};
 
 	const toggleQr = () => {
@@ -105,33 +122,41 @@ export default function PromoCodeWidget({ code }) {
 					</button>
 
 					{showQr && qrDataUrl && (
-						<button
-							onClick={downloadQr}
-							className="flex items-center gap-1.5 px-3 py-1.5 border border-white/15 rounded-lg text-xs text-white/50 hover:text-white hover:border-white/30 transition-all duration-200">
-							<Download className="w-3.5 h-3.5" />
-							Download PNG
-						</button>
+						<div className="flex flex-wrap gap-2">
+							<button
+								onClick={downloadQr}
+								className="flex items-center gap-1.5 px-3 py-1.5 border border-white/15 rounded-lg text-xs text-white/50 hover:text-white hover:border-white/30 transition-all duration-200">
+								<Download className="w-3.5 h-3.5" />
+								Black PNG
+							</button>
+							<button
+								onClick={downloadQrWhite}
+								title="White on transparent, for dark backgrounds. Some older scanner apps can't read light-on-dark codes."
+								className="flex items-center gap-1.5 px-3 py-1.5 border border-white/15 rounded-lg text-xs text-white/50 hover:text-white hover:border-white/30 transition-all duration-200">
+								<Download className="w-3.5 h-3.5" />
+								White PNG
+							</button>
+						</div>
 					)}
 				</div>
 
 				{showQr && (
 					<div className="mt-4 flex justify-start">
 						{qrDataUrl ? (
-							<div className="p-3 bg-[#0d0d0d] border border-white/10 rounded-xl inline-block">
+							<div className="p-3 bg-white rounded-xl inline-block">
 								{/* eslint-disable-next-line @next/next/no-img-element */}
 								<img
 									src={qrDataUrl}
 									alt={`QR code for ${code}`}
-									width={160}
-									height={160}
-									className="rounded-lg"
+									width={200}
+									height={200}
 								/>
-								<p className="text-[10px] text-white/25 text-center mt-2 font-mono">
+								<p className="text-[11px] text-black/60 text-center mt-1 font-mono tracking-widest">
 									{code}
 								</p>
 							</div>
 						) : (
-							<div className="w-40 h-40 bg-white/5 rounded-xl animate-pulse" />
+							<div className="w-[224px] h-[224px] bg-white/5 rounded-xl animate-pulse" />
 						)}
 					</div>
 				)}
