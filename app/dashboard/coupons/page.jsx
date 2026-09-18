@@ -54,7 +54,6 @@ function StatusPill({ status }) {
 
 const EMPTY_FORM = {
 	code: "",
-	discount_percent: "10",
 	label: "",
 	max_uses: "",
 	expires_at: "",
@@ -71,7 +70,7 @@ export default function CouponsPage() {
 
 	const load = useCallback(async () => {
 		try {
-			const res = await creatorFetch("/api/coupons");
+			const res = await creatorFetch("/api/creator/coupons");
 			if (res.ok) {
 				const json = await res.json();
 				setCoupons(Array.isArray(json) ? json : []);
@@ -92,18 +91,14 @@ export default function CouponsPage() {
 		e.preventDefault();
 		setError(null);
 
-		const discount = parseInt(form.discount_percent, 10);
-		if (Number.isNaN(discount) || discount < 5 || discount > 25) {
-			setError("Discount must be between 5% and 25%.");
-			return;
-		}
 		const code = form.code.trim().toUpperCase();
 		if (code && !/^[A-Z0-9]{4,12}$/.test(code)) {
 			setError("Custom code must be 4–12 letters or digits.");
 			return;
 		}
 
-		const payload = { discount_percent: discount };
+		// No discount here: Epocheye sets it per creator (creator terms, section 2).
+		const payload = {};
 		if (code) payload.code = code;
 		if (form.label.trim()) payload.label = form.label.trim();
 		if (form.max_uses.trim()) {
@@ -117,7 +112,7 @@ export default function CouponsPage() {
 
 		setSubmitting(true);
 		try {
-			const res = await creatorFetch("/api/coupons", {
+			const res = await creatorFetch("/api/creator/coupons", {
 				method: "POST",
 				body: JSON.stringify(payload),
 			});
@@ -138,7 +133,7 @@ export default function CouponsPage() {
 	const handleDeactivate = async (id) => {
 		setDeactivating(id);
 		try {
-			const res = await creatorFetch(`/api/coupons/${id}`, { method: "DELETE" });
+			const res = await creatorFetch(`/api/creator/coupons/${id}`, { method: "DELETE" });
 			if (res.ok) await load();
 		} finally {
 			setDeactivating(null);
@@ -160,7 +155,8 @@ export default function CouponsPage() {
 			<div className="mb-8">
 				<h1 className="text-xl font-semibold text-white">Coupons</h1>
 				<p className="text-white/35 text-sm mt-1">
-					Create discount codes your audience can apply at checkout in the Epocheye app.
+					Create extra codes for campaigns. Every code gives your audience the discount
+					Epocheye set for your account, and you earn on the full list price.
 				</p>
 			</div>
 
@@ -182,19 +178,6 @@ export default function CouponsPage() {
 							placeholder="Auto-generated if blank"
 							maxLength={12}
 							className="bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono uppercase placeholder:text-white/20 placeholder:normal-case focus:outline-none focus:border-white/30"
-						/>
-					</label>
-
-					<label className="flex flex-col gap-1.5">
-						<span className="text-xs text-white/40">Discount % (5–25)</span>
-						<input
-							type="number"
-							min={5}
-							max={25}
-							required
-							value={form.discount_percent}
-							onChange={update("discount_percent")}
-							className="bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
 						/>
 					</label>
 

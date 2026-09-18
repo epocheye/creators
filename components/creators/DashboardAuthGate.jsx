@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@clerk/nextjs";
+import { creatorFetch } from "@/lib/creatorApi";
 import { CREATOR_ROUTES } from "@/lib/creatorRoutes";
+
+export const ACCEPT_TERMS_PATH = "/accept";
 
 /**
  * Client-side auth gate for the dashboard.
@@ -20,10 +23,17 @@ import { CREATOR_ROUTES } from "@/lib/creatorRoutes";
  * useSession() exposes clerk-js's own view, so the two cannot disagree.
  *
  * Server-side protection is intentionally absent (see proxy.js).
+ *
+ * TERMS: with `requireTerms` (the default), a signed-in creator who has not
+ * accepted the current creator terms is sent to ACCEPT_TERMS_PATH. If the
+ * profile can't be loaded, the dashboard renders anyway: the server keeps the
+ * code unsynced (unusable in the app) until acceptance, so failing open here
+ * never makes a code live without it.
  */
-export default function DashboardAuthGate({ children }) {
+export default function DashboardAuthGate({ children, requireTerms = true }) {
 	const { isLoaded, session } = useSession();
 	const router = useRouter();
+	const [termsChecked, setTermsChecked] = useState(!requireTerms);
 
 	const hasClientSession = Boolean(session);
 
@@ -34,7 +44,28 @@ export default function DashboardAuthGate({ children }) {
 		}
 	}, [isLoaded, hasClientSession, router]);
 
-	if (!isLoaded || !hasClientSession) {
+	useEffect(() => {
+		if (!requireTerms || !isLoaded || !hasClientSession) return undefined;
+		let active = true;
+		(async () => {
+			try {
+				const res = await creatorFetch("/api/creator/me");
+				const json = await res.json();
+				if (active && json?.success && json.data?.terms_current === false) {
+					router.replace(ACCEPT_TERMS_PATH);
+					return;
+				}
+			} catch {
+				// Fail open; see the TERMS note above.
+			}
+			if (active) startTransition(() => setTermsChecked(true));
+		})();
+		return () => {
+			active = false;
+		};
+	}, [requireTerms, isLoaded, hasClientSession, router]);
+
+	if (!isLoaded || !hasClientSession || !termsChecked) {
 		return (
 			<div className="min-h-screen flex items-center justify-center bg-[#080808]">
 				<div className="h-6 w-6 rounded-full border-2 border-white/15 border-t-white/60 animate-spin" />
