@@ -129,9 +129,9 @@ export default async function CreatorTermsPage() {
 
 					<Section n={4} title="What counts as a click and a sale">
 						<p>
-							There are no referral links. You share your code, or a QR of it,
-							and people enter it in the Epocheye app. A click is a person
-							entering your code in the app, counted once per person per day.
+							You share your code and your Epocheye QR. Scanning the QR opens the
+							Epocheye app in the Play Store or App Store; each scan counts as a
+							click. Clicks are for your information and do not earn commission.
 						</p>
 						<p>
 							A sale qualifies when a customer uses your code at checkout in the

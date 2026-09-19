@@ -3,22 +3,31 @@
 import { useEffect, useState } from "react";
 import { Copy, Check, Download, QrCode } from "lucide-react";
 import { trackEvent, EVENT_NAMES } from "@/lib/analytics";
+import { CUSTOMER_DISCOUNT_PERCENT } from "@/lib/creatorProgram";
 import { styledQrPng } from "@/lib/styledQr";
 
-// Creators share only their code (or a QR of it). There is no link: nobody is
-// sent to a website or an app store. Followers type or scan the code into the
-// Epocheye app at checkout, which is where entries and sales are counted.
+const MAIN_SITE_ORIGIN = (
+	process.env.NEXT_PUBLIC_MAIN_SITE_ORIGIN || "https://epocheye.com"
+).replace(/\/$/, "");
+
+// A creator shares their code, and a QR that opens Epocheye in the app store.
+// The QR goes through epocheye.com/r/CODE, which counts the scan as a click
+// for this creator and redirects straight to the Play Store / App Store (no web
+// page). A sale counts only when someone pays in the app with the code.
 export default function PromoCodeWidget({ code }) {
 	const [codeCopied, setCodeCopied] = useState(false);
 	const [qrDataUrl, setQrDataUrl] = useState(null);
 	const [showQr, setShowQr] = useState(false);
 
-	// Epocheye-styled QR of the plain code (no URL), black on white: the
-	// version every phone scanner reads. Generated on the client only.
+	const scanUrl = code ? `${MAIN_SITE_ORIGIN}/r/${code}` : "";
+	const caption = code ? `Use code ${code} for ${CUSTOMER_DISCOUNT_PERCENT}% off` : "";
+
+	// Epocheye-styled QR of the scan link, black on white (the version every
+	// phone scanner reads), with the code printed under it. Client only.
 	useEffect(() => {
 		if (!code) return;
 		let cancelled = false;
-		styledQrPng(code, { logoHref: "/logo-black.png" })
+		styledQrPng(scanUrl, { logoHref: "/logo-black.png", caption })
 			.then((url) => {
 				if (!cancelled) setQrDataUrl(url);
 			})
@@ -26,7 +35,7 @@ export default function PromoCodeWidget({ code }) {
 		return () => {
 			cancelled = true;
 		};
-	}, [code]);
+	}, [code, scanUrl, caption]);
 
 	const copy = async (text, setFn, eventName) => {
 		try {
@@ -55,10 +64,11 @@ export default function PromoCodeWidget({ code }) {
 	// White code + white logo on a transparent background, for dark posts.
 	const downloadQrWhite = async () => {
 		try {
-			const url = await styledQrPng(code, {
+			const url = await styledQrPng(scanUrl, {
 				color: "#ffffff",
 				background: "none",
 				logoHref: "/logo-white.png",
+				caption,
 			});
 			trackEvent(EVENT_NAMES.promoQrDownloaded);
 			saveAs(url, `epocheye-${code}-qr-white.png`);
@@ -147,13 +157,10 @@ export default function PromoCodeWidget({ code }) {
 								{/* eslint-disable-next-line @next/next/no-img-element */}
 								<img
 									src={qrDataUrl}
-									alt={`QR code for ${code}`}
+									alt={`QR code that opens Epocheye in the app store, with code ${code}`}
 									width={200}
-									height={200}
+									height={224}
 								/>
-								<p className="text-[11px] text-black/60 text-center mt-1 font-mono tracking-widest">
-									{code}
-								</p>
 							</div>
 						) : (
 							<div className="w-[224px] h-[224px] bg-white/5 rounded-xl animate-pulse" />
@@ -163,9 +170,9 @@ export default function PromoCodeWidget({ code }) {
 			</div>
 
 			<p className="text-xs text-white/35 mt-4 leading-relaxed">
-				Share only this code, or its QR. Your followers enter it in the Epocheye app when
-				they unlock your monument. Each person entering it counts once a day as a code
-				entry; a sale counts only when they pay in the app with your code.
+				Share your code and this QR. Scanning the QR opens Epocheye in the Play Store or
+				App Store and counts as a click for you. A sale counts only when someone pays in
+				the app with your code.
 			</p>
 		</div>
 	);

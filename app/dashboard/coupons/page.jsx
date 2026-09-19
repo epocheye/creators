@@ -91,8 +91,9 @@ export default function CouponsPage() {
 				</h1>
 				<p className="text-white/35 text-sm mt-1 max-w-2xl">
 					Your code works only in the Epocheye app, only at your monument, during your window.
-					A code entry is someone typing your code in the app (counted once per person per day).
-					A sale is someone paying in the app with your code.
+					Clicks are scans of your QR (see the overview). A code entry is someone typing your
+					code in the app, once per person per day. A sale is someone paying in the app with
+					your code.
 				</p>
 			</div>
 

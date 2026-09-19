@@ -82,8 +82,8 @@ function AcceptTermsForm() {
 						there during that window. Monuments now: {monuments.map((m) => m.name).join(", ")}.
 					</li>
 					<li>
-						No links: people enter your code in the app. Entries count as clicks; only paid
-						unlocks with your code count as sales.
+						A scan of your QR (it opens Epocheye in the app store) counts as a click. Only paid
+						unlocks in the app with your code count as sales.
 					</li>
 					<li>Payouts go by UPI, in rupees.</li>
 				</ul>
