@@ -7,13 +7,12 @@ import {
 	CUSTOMER_DISCOUNT_PERCENT,
 	HOLD_DAYS,
 	DEFAULT_MONUMENTS,
-	LIST_PRICE_INR,
+	FALLBACK_INR_PER_USD,
 	MIN_PAYOUT_INR,
 	SUPPORT_EMAIL,
 	TERMS_VERSION,
 	TIERS,
-	commissionPerSale,
-	formatInr,
+	formatUsd,
 } from "@/lib/creatorProgram";
 
 export const metadata = {
@@ -28,19 +27,23 @@ const MAIN_SITE_ORIGIN = (
 	"https://epocheye.com"
 ).replace(/\/$/, "");
 
-// Monuments the admin lists on the creator page (Admin → Settings → Creator Page).
-async function getMonuments() {
+// Monuments the admin lists on the creator page (Admin → Settings → Creator
+// Page), today's INR-per-USD rate, and the payout minimum.
+async function getProgram() {
 	try {
 		const res = await fetch(`${MAIN_SITE_ORIGIN}/api/creator/program`, {
 			next: { revalidate: 60 },
 		});
 		const json = await res.json();
-		const list = json?.data?.monuments;
-		if (json?.success && Array.isArray(list) && list.length > 0) return list;
+		const d = json?.success ? json.data || {} : {};
+		return {
+			monuments: Array.isArray(d.monuments) && d.monuments.length > 0 ? d.monuments : DEFAULT_MONUMENTS,
+			inrPerUsd: Number(d.inr_per_usd) > 0 ? Number(d.inr_per_usd) : FALLBACK_INR_PER_USD,
+			minPayoutInr: Number(d.min_payout_inr) > 0 ? Number(d.min_payout_inr) : MIN_PAYOUT_INR,
+		};
 	} catch {
-		// Fall through to the default.
+		return { monuments: DEFAULT_MONUMENTS, inrPerUsd: FALLBACK_INR_PER_USD, minPayoutInr: MIN_PAYOUT_INR };
 	}
-	return DEFAULT_MONUMENTS;
 }
 
 function Section({ n, title, children }) {
@@ -55,7 +58,7 @@ function Section({ n, title, children }) {
 }
 
 export default async function CreatorTermsPage() {
-	const monuments = await getMonuments();
+	const { monuments, inrPerUsd, minPayoutInr } = await getProgram();
 	return (
 		<main className="min-h-screen bg-black font-montserrat text-white">
 			<article className="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
@@ -89,15 +92,14 @@ export default async function CreatorTermsPage() {
 							The program is invite-only. You apply by signing up and submitting
 							your profile; Epocheye reviews every application and may accept or
 							decline it at its discretion. At most {MAX_CREATORS} creators are in
-							the program at a time. You must be a resident of India, at least 18,
-							with a UPI ID in your own name. One creator account per person.
+							the program at a time. You must be a resident of India and at least
+							18. One creator account per person.
 						</p>
 					</Section>
 
 					<Section n={2} title="What you are promoting">
 						<p>
-							A one-time unlock of one monument in the Epocheye app, at a list
-							price of {formatInr(LIST_PRICE_INR)} with {ACCESS_HOURS} hours of
+							A one-time unlock of one monument in the Epocheye app, with {ACCESS_HOURS} hours of
 							access. It is not a subscription. The program currently covers:{" "}
 							{monuments
 								.map((m) => (m.place ? `${m.name} (${m.place})` : m.name))
@@ -146,19 +148,15 @@ export default async function CreatorTermsPage() {
 
 					<Section n={5} title="Commission">
 						<p>
-							Commission is a percentage of the {formatInr(LIST_PRICE_INR)} list
-							price, not of the discounted price, so the customer discount never
-							reduces your earnings. Your rate for each sale depends on how many
-							qualifying sales you have made before it:
+							Commission is a percentage of the full price of each unlock, before
+							the customer discount, so the discount never reduces your earnings.
+							Your rate for each sale depends on how many qualifying sales you have
+							made before it:
 						</p>
 						<ul className="list-disc space-y-1 pl-5">
 							{TIERS.map((t) => (
 								<li key={t.from}>
-									{t.to === null
-										? `Sale ${t.from} onward`
-										: `Sales ${t.from} to ${t.to}`}
-									: {t.rate}%, which is{" "}
-									{formatInr(commissionPerSale(t.rate), { decimals: 2 })} per sale
+									{t.to === null ? `Sale ${t.from} onward` : `Sales ${t.from} to ${t.to}`}: {t.rate}%
 								</li>
 							))}
 						</ul>
@@ -172,9 +170,14 @@ export default async function CreatorTermsPage() {
 						<p>
 							Each sale is held for {HOLD_DAYS} days so refunds can clear, then
 							becomes payable. Once your payable balance reaches{" "}
-							{formatInr(MIN_PAYOUT_INR)}, you can request a payout from your
-							dashboard. We pay to the UPI ID on your account and process
-							requests at least once a month. Payouts are in Indian rupees.
+							{formatUsd(minPayoutInr, inrPerUsd, { decimals: 0 })}, you can request a
+							payout from your dashboard. Amounts are shown in US dollars, converted
+							at the day&apos;s exchange rate, and paid in Indian rupees. For payment
+							details, contact{" "}
+							<a href={`mailto:${SUPPORT_EMAIL}`} className="underline">
+								{SUPPORT_EMAIL}
+							</a>
+							.
 						</p>
 					</Section>
 

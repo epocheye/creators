@@ -9,11 +9,9 @@ import { CREATOR_ROUTES } from "@/lib/creatorRoutes";
 import {
 	ASSIGNMENT_DAYS,
 	CUSTOMER_DISCOUNT_PERCENT,
-	LIST_PRICE_INR,
 	SUPPORT_EMAIL,
 	TERMS_VERSION,
 	TIERS,
-	formatInr,
 } from "@/lib/creatorProgram";
 import { useCreatorMonuments } from "@/lib/useCreatorMonuments";
 
@@ -70,12 +68,12 @@ function AcceptTermsForm() {
 
 				<ul className="mt-5 space-y-2 text-sm text-white/65">
 					<li>
-						You promote a one-time monument unlock at {formatInr(LIST_PRICE_INR)}.
-						Your code gives {CUSTOMER_DISCOUNT_PERCENT}% off.
+						You promote a one-time monument unlock in the Epocheye app. Your code gives{" "}
+						{CUSTOMER_DISCOUNT_PERCENT}% off.
 					</li>
 					<li>
 						You earn {TIERS[0].rate}% to {TIERS[TIERS.length - 1].rate}% of the
-						list price per sale, rising with your total sales.
+						full price of each sale, rising with your total sales.
 					</li>
 					<li>
 						You get one monument for {ASSIGNMENT_DAYS} days at a time, and your code works only
@@ -85,7 +83,10 @@ function AcceptTermsForm() {
 						A scan of your QR (it opens Epocheye in the app store) counts as a click. Only paid
 						unlocks in the app with your code count as sales.
 					</li>
-					<li>Payouts go by UPI, in rupees.</li>
+					<li>
+						Amounts are shown in US dollars and paid in Indian rupees. For payment details,
+						contact {SUPPORT_EMAIL}.
+					</li>
 				</ul>
 
 				<label className="mt-6 flex items-start gap-3 text-sm text-white/75">
@@ -110,7 +111,7 @@ function AcceptTermsForm() {
 						onChange={(e) => setIndiaResident(e.target.checked)}
 						className="mt-1"
 					/>
-					<span>I am a resident of India, at least 18, with a UPI ID in my name.</span>
+					<span>I am a resident of India and at least 18.</span>
 				</label>
 
 				{error && <p className="mt-4 text-sm text-red-400">{error}</p>}

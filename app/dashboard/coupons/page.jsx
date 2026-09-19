@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { BadgePercent, Copy, Check } from "lucide-react";
 import { creatorFetch } from "@/lib/creatorApi";
+import { formatUsd } from "@/lib/creatorProgram";
+import { useCreatorProgram } from "@/lib/useCreatorMonuments";
 
 function formatDate(value) {
 	if (!value) return "—";
@@ -15,10 +17,6 @@ function formatDate(value) {
 	} catch {
 		return "—";
 	}
-}
-
-function formatPaise(paise) {
-	return `₹${(Number(paise || 0) / 100).toFixed(2)}`;
 }
 
 // A code is live only while its creator holds a monument (see the "Your
@@ -53,6 +51,7 @@ export default function CouponsPage() {
 	const [coupons, setCoupons] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [copied, setCopied] = useState(null);
+	const { inrPerUsd } = useCreatorProgram();
 
 	useEffect(() => {
 		let active = true;
@@ -140,7 +139,7 @@ export default function CouponsPage() {
 										<td className="px-5 py-3 text-right text-white/70">{c.entries ?? 0}</td>
 										<td className="px-5 py-3 text-right text-white/70">{c.total_orders ?? 0}</td>
 										<td className="px-5 py-3 text-right text-white/50">
-											{formatPaise(c.total_discount_given_paise)}
+											{formatUsd(Number(c.total_discount_given_paise || 0) / 100, inrPerUsd)}
 										</td>
 										<td className="px-5 py-3 text-white/50 text-xs">
 											{c.is_active && c.valid_from
